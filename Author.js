@@ -1,4 +1,6 @@
+const Validation = require('./Validations');
 const Author = {};
+
 
 /**
  * Autoriaus irasymas i duombaze.
@@ -8,6 +10,16 @@ const Author = {};
  * @returns {Promise<string>} Tekstas, apibudinantis, koks autorius buvo irasytas i duombaze.
  */
 Author.create = async (connection, authorFirstname, authorLastname) => {
+    //VALIDATION:
+
+    if (!Validation.isValidFirstName(authorFirstname)) {
+        return `$ Incorrect author name entry! $`;
+    }
+
+    if (!Validation.isValidLastName(authorLastname)) {
+        return `$ Incorrect surname entry! $`;
+    }
+
     const sql = 'INSERT INTO `authors`\
                     (`id`, `firstname`, `lastname`) \
                 VALUES (NULL, " '+ authorFirstname + ' ", " ' + authorLastname + ' ")';
@@ -28,8 +40,8 @@ Author.listAll = async (connection) => {
     let i = 0;
     const list = [];
     for (let { firstname, lastname } of rows) {
-        list.push(`${++i}. ${firstname}${lastname}.`)
-    };
+        list.push(`${++i}. ${firstname}${lastname}.`);
+    }
     const authorsList = 'Authors list:\n';
 
     return authorsList + list.join('\n');
@@ -42,10 +54,17 @@ Author.listAll = async (connection) => {
  * @returns {Promise<Object[]>} Grazina autoriaus varda ir pavarde pagal ieskoma varda.
  */
 Author.findById = async (connection, authorId) => {
+    //Validations:
+
+    if (!Validation.isValidID(authorId)) {
+        return `$ Author ID has to be positive integer number! $`
+    }
+
     const sql = 'SELECT * FROM `authors` WHERE `authors`.`id` = ' + authorId;
     const [rows] = await connection.execute(sql);
-    if (rows.length === 0) {
-        return 'ERROR: ID not found'
+
+    if (rows.length === 0) { // if validacija: jei lentele yra tuscia? 
+        return '$ ERROR: author ID not found! $'
     }
     return `Author, who ID = ${authorId} is ${rows[0].firstname} ${rows[0].lastname}`;
 }
@@ -60,13 +79,18 @@ Author.findByFirstname = async (connection, authorFirstname) => {
     const sql = 'SELECT * FROM `authors` WHERE `firstname` LIKE "%' + authorFirstname + '%"';
     const [rows] = await connection.execute(sql);
 
+    //Validation:
+
+    if (!Validation.isValidFirstName(authorFirstname)) {
+        return `$ Incorrect author name entry! $`;
+    }
     if (rows.length === 0) {
-        return 'Author not found!';
+        return '$ Author not found! $';
     } else {
         const name = rows[0].firstname;
         const surname = rows[0].lastname;
         const author = `${name} ${surname}`;
-        return `Your searched author by name is ${author}`;
+        return `$ Your searched author by name is ${author}. $`;
     }
 }
 
@@ -79,13 +103,17 @@ Author.findByFirstname = async (connection, authorFirstname) => {
 Author.findByLastname = async (connection, authorLastname) => {
     const sql = 'SELECT * FROM `authors` WHERE `lastname` LIKE "%' + authorLastname + '%"';
     const [rows] = await connection.execute(sql);
+
+    if (!Validation.isValidLastName(authorLastname)) {
+        return `$ Incorrect author surname entry! $`;
+    }
     if (rows.length === 0) {
-        return 'Author not found!';
+        return '$ Author not found! $';
     } else {
         const name = rows[0].firstname;
         const surname = rows[0].lastname;
         const author = `${name} ${surname}`;
-        return `Your searched author by surname is ${author}`;
+        return `$ Your searched author by surname is ${author}. $`;
     }
 }
 
@@ -98,9 +126,30 @@ Author.findByLastname = async (connection, authorLastname) => {
  * @returns { Promise < string >} Tekstas, skelbiantis kokia savybe, pagal duota ID, buvo atnaujinta i kokia verte.
  */
 Author.updatePropertyById = async (connection, authorId, propertyName, propertyValue) => {
-    sql = 'UPDATE authors SET ' + propertyName + ' = "' + propertyValue + '" WHERE `authors`.`id` = ' + authorId;
+
+    const props = ['id', 'firstname', 'lastname']; //sarasas
+    if (!props.includes(propertyName)) {
+        return '$ ERROR: author not found! $'
+    }
+    if (!Validation.isValidID(authorId)) {
+        return `$ Author ID has to be positive integer number! $`
+    }
+    if (!Validation.isText(propertyName)) {
+
+        return `$ ERROR: wrong parameter integer $`;
+    }
+
+    if (propertyName === 'firstname' && !Validation.isValidText(propertyValue)) {
+        return console.error('ERROR: incorrect firstname entry')
+    }
+
+    if (propertyName === 'lastname' && !Validation.isValidText(propertyValue)) {
+        return console.error('ERROR: incorrect lastname entry.')
+    }
+
+    const sql = 'UPDATE authors SET ' + propertyName + ' = "' + propertyValue + '" WHERE `authors`.`id` = ' + authorId;
     [rows] = await connection.execute(sql);
-    const updated = `Author whose ID = ${authorId} property ${propertyName} has been updated to ${propertyValue}`
+    const updated = `$ Author whose ID = ${authorId} property ${propertyName} has been updated to ${propertyValue}. $`
     return updated
 }
 
@@ -111,9 +160,13 @@ Author.updatePropertyById = async (connection, authorId, propertyName, propertyV
  * @returns {Promise<Object[]>} Grazina pranesima apie atlikta operacija.
  */
 Author.delete = async (connection, authorId) => {
-    sql = 'DELETE FROM `authors` WHERE `authors`.`id` = ' + authorId;
+    if (!Validation.isValidID(authorId)) {
+        return `$ Author ID has to be positive integer number! $`
+    }
+    sql = 'DELETE FROM `authors` \
+                WHERE `authors`.`id` = ' + authorId;
     [rows] = await connection.execute(sql);
-    return `This author, who ID = ${authorId} has been deleted from list.`;
+    return `$ This author, who ID = ${authorId} has been deleted from list. $`;
 }
 
 module.exports = Author;
