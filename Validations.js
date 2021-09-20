@@ -36,5 +36,11 @@ class Validation {
             return true;
         }
     }
-        module.exports = Validation;
+
+    // static isYearValid = (param) => {
+
+    // }
+}
+
+module.exports = Validation;
 

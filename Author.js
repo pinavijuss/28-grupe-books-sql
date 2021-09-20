@@ -104,6 +104,8 @@ Author.findByLastname = async (connection, authorLastname) => {
     const sql = 'SELECT * FROM `authors` WHERE `lastname` LIKE "%' + authorLastname + '%"';
     const [rows] = await connection.execute(sql);
 
+    //Validation:
+
     if (!Validation.isValidLastName(authorLastname)) {
         return `$ Incorrect author surname entry! $`;
     }
@@ -126,16 +128,18 @@ Author.findByLastname = async (connection, authorLastname) => {
  * @returns { Promise < string >} Tekstas, skelbiantis kokia savybe, pagal duota ID, buvo atnaujinta i kokia verte.
  */
 Author.updatePropertyById = async (connection, authorId, propertyName, propertyValue) => {
+    //Validation: 
 
     const props = ['id', 'firstname', 'lastname']; //sarasas
     if (!props.includes(propertyName)) {
         return '$ ERROR: author not found! $'
     }
+
     if (!Validation.isValidID(authorId)) {
         return `$ Author ID has to be positive integer number! $`
     }
-    if (!Validation.isText(propertyName)) {
 
+    if (!Validation.isValidText(propertyName)) {
         return `$ ERROR: wrong parameter integer $`;
     }
 
@@ -160,6 +164,8 @@ Author.updatePropertyById = async (connection, authorId, propertyName, propertyV
  * @returns {Promise<Object[]>} Grazina pranesima apie atlikta operacija.
  */
 Author.delete = async (connection, authorId) => {
+    //Validation:
+
     if (!Validation.isValidID(authorId)) {
         return `$ Author ID has to be positive integer number! $`
     }

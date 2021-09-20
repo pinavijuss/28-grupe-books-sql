@@ -15,10 +15,24 @@ const Books = {};
  * @param {number} bookReleaseYear Knygos isleidimo metai.
  * @returns {Promise<string>} Tekstas, apibudinantis, koks autorius ir kurias metais isleido knyga.
  */
+
 Books.create = async (connection, authorId, bookName, bookReleaseYear) => {
+    //Validation:
+    if (!Validation.isValidID(authorId)) {
+        return `$ Author ID has to be positive integer number! $`
+    }
+    if (!Validation.isValidName(bookName)) {
+        return `$ Incorrect author name entry! $`;
+    }
+
+    // if (!Validation.isYearValid(bookReleaseYear)) {
+    //     return `ERROR: Incorrect date input`
+    // }
+
     const sql = 'INSERT INTO `books`\
                     (`author_id`, `book_name`, `release_year`) \
                 VALUES (" '+ authorId + ' ", " ' + bookName + ' ", " ' + bookReleaseYear + ' ")';
+
     const [rows] = await connection.execute(sql);
     const createBook = `${bookName} written by author who ID is ${authorId}, released in ${bookReleaseYear} was succesfully created!`
     return createBook;
@@ -53,6 +67,9 @@ Books.findByName = async (connection, bookName) => {
     const sql = 'SELECT * FROM `books` WHERE `book_name` LIKE "%' + bookName + '%"';
     const [rows] = await connection.execute(sql);
 
+    if (!Validation.isValidName(bookName)) {
+        return `$ Incorrect book title entry! $`;
+    }
     let response = 'Book not found!'
 
     if (rows.length > 0) {
@@ -91,9 +108,20 @@ Books.findByYear = async (connection, bookReleaseYear) => {
 Books.updateById = async (connection, bookId, propertyName, propertyValue) => {
 
     const props = ['id', 'author_id', 'book_name', 'release_year']; //sarasas
+    //Validations:
     if (!props.includes(propertyName)) {
-        return 'ERROR, author not found'
+        return 'ERROR, insert correct integer!'
+    }
+    if (!Validation.isValidID(bookId)) {
+        return `$ Book ID has to be positive integer number! $`
+    }
 
+    if (!Validation.isValidText(propertyName)) {
+        return `$ ERROR: wrong parameter integer $`;
+    }
+
+    if (propertyName === 'book_name' && !Validation.isValidText(propertyValue)) {
+        return console.error('ERROR: incorrect book title entry')
     }
 
     const sql = 'UPDATE `books`\
@@ -113,6 +141,14 @@ Books.updateById = async (connection, bookId, propertyName, propertyValue) => {
  */
 
 Books.updateNameById = async (connection, bookId, bookName) => {
+    //Validations:
+    if (!Validation.isValidID(bookId)) {
+        return `$ Book ID has to be positive integer number! $`
+    }
+
+    if (!Validation.isValidName(bookName)) {
+        return `$ Incorrect book title entry! $`;
+    }
 
     const sql = 'UPDATE `books` \
                         SET `book_name` = "'+ bookName + '" \
@@ -130,6 +166,11 @@ Books.updateNameById = async (connection, bookId, bookName) => {
  * @returns {Promise<Object[]>} Grazina pranesima apie atlikta operacija.
  */
 Books.updateYearById = async (connection, bookId, bookReleaseYear) => {
+    //Validations:
+
+    if (!Validation.isValidID(bookId)) {
+        return `$ Book ID has to be positive integer number! $`
+    }
 
     const sql = 'UPDATE `books` \
                         SET `release_year` = "'+ bookReleaseYear + '" \
@@ -146,6 +187,11 @@ Books.updateYearById = async (connection, bookId, bookReleaseYear) => {
  * @returns {Promise<Object[]>} Grazina pranesima apie atlikta operacija.
  */
 Books.delete = async (connection, bookId) => {
+    //Validation:
+
+    if (!Validation.isValidID(bookId)) {
+        return `$ Book ID has to be positive integer number! $`
+    }
     const sql = 'DELETE FROM `books`\
                         WHERE `books`.`id` = ' + bookId;
     const [rows] = await connection.execute(sql);
@@ -153,13 +199,17 @@ Books.delete = async (connection, bookId) => {
     return deleted;
 }
 
+/**
+   * Pasaliname knyga is lenteles pagal duota autoriaus ID.
+   * @param {Object} connection Objektas, su kuriuo kvieciame duombazes mainpuliavimo metodus.
+   * @param {number} authorId Autoriaus ID.
+   * @returns {Promise<Object[]>} Grazina pranesima apie atlikta operacija.
+   */
 Books.deleteAllByAuthorId = async (connection, authorId) => {
-    /**
-    * Pasaliname knyga is lenteles pagal duota autoriaus ID.
-    * @param {Object} connection Objektas, su kuriuo kvieciame duombazes mainpuliavimo metodus.
-    * @param {number} authorId Autoriaus ID.
-    * @returns {Promise<Object[]>} Grazina pranesima apie atlikta operacija.
-    */
+    //Validation:
+    if (!Validation.isValidID(authorId)) {
+        return `$ Book ID has to be positive integer number! $`
+    }
 
     const sql = 'DELETE FROM `books`\
                         WHERE `author_id` = ' + authorId;
